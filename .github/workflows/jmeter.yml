@@ -17,7 +17,7 @@ jobs:
         uses: QAInsights/PerfAction@v5.6.2
         with:
           test-plan-path: ./demo_api_test.jmx
-          args: '-n -t ./demo_api_test.jmx -l result.jtl -e -o reports/html'
+          args: '-n -t ./demo_api_test.jmx -l result.jtl -e -o reports'
 
       # Upload JMeter Report as an Artifact
       - name: Upload JMeter Report
