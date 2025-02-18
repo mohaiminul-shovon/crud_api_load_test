@@ -1,36 +1,36 @@
-# This is a basic workflow to help you get started with Actions
+name: Run JMeter Load Test
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: # Manual trigger
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  load-test:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      # Build Docker Image for JMeter
+      - name: Build JMeter Docker Image
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          docker build -t jmeter-docker .
+
+      # Run JMeter Test
+      - name: Execute JMeter Load Test
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v ${{ github.workspace }}/reports:/reports \
+            -v ${{ github.workspace }}/demo_api_test.jmx:/tests/test.jmx \
+            jmeter-docker \
+            -n -t /tests/test.jmx -l /reports/results.jtl -e -o /reports/html
+
+      # Upload JMeter Report as an Artifact
+      - name: Upload JMeter Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-report
+          path: reports/html
+          retention-days: 7 # Keep the report for 7 days
