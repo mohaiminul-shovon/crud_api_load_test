@@ -1,7 +1,7 @@
 name: Run JMeter Load Test
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   load-test:
@@ -10,27 +10,19 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # Build Docker Image for JMeter
-      - name: Build JMeter Docker Image
-        run: |
-          docker build -t jmeter-docker .
-
-      # Run JMeter Test
-      - name: Execute JMeter Load Test
-        run: |
-          mkdir -p reports
-          docker run --rm \
-            -v ${{ github.workspace }}/reports:/reports \
-            -v ${{ github.workspace }}/demo_api_test.jmx:/tests/test.jmx \
-            jmeter-docker \
-            -n -t /tests/test.jmx -l /reports/results.jtl -e -o /reports/html
+      # Run JMeter Test using PerfAction
+      - name: Run JMeter Test
+        uses: QAInsights/PerfAction@v5.6.2
+        with:
+          test-plan-path: ./demo_api_test.jmx
+          args: '-n -t ./demo_api_test.jmx -l result.jtl -e -o reports/html'
 
       # Upload JMeter Report as an Artifact
       - name: Upload JMeter Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: jmeter-report
           path: reports/html
-          retention-days: 7 # Keep the report for 7 days
+          retention-days: 7
